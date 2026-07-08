@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>무역센터 신규단가 계산기</title>
+<style>
+  :root{
+    --ink:#2B3A47; --sub:#52697A; --faint:#86A0B0; --line:#b6ccd8;
+    --paper:#EAF4FB; --card:#FFFFFF; --soft:#EFF7FC; --accent:#3D5A80;
+    --green:#4E8D7C; --red:#C25B52;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+    background:var(--paper); color:var(--ink); min-height:100vh; padding:20px 16px 48px;
+  }
+  .wrap{max-width:640px; margin:0 auto;}
+  .eyebrow{font-size:11px; letter-spacing:.2em; font-weight:600; color:var(--faint);}
+  h1{font-size:22px; letter-spacing:-.02em; margin:2px 0 16px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px;}
+  .card h2{font-size:13px; color:var(--sub); margin-bottom:10px;}
+  .num{font-variant-numeric:tabular-nums;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{font-weight:600; color:var(--sub); text-align:right; padding:6px 8px; background:var(--soft); white-space:nowrap;}
+  th:first-child{text-align:left; border-radius:8px 0 0 8px;}
+  th:last-child{border-radius:0 8px 8px 0;}
+  td{padding:8px; text-align:right; border-top:1px solid #DCEAF4; white-space:nowrap;}
+  td:first-child{text-align:left; font-weight:600;}
+  td input{width:88px; text-align:right; padding:4px 6px; border:1px solid #b6ccd8; border-radius:6px; font:inherit; font-variant-numeric:tabular-nums;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  label.f{display:block; font-size:11px; font-weight:600; color:var(--sub);}
+  label.f input, label.f select{
+    width:100%; margin-top:4px; padding:8px 10px; border:1px solid #b6ccd8; border-radius:10px;
+    font:inherit; font-size:14px; background:#fff; font-variant-numeric:tabular-nums; text-align:right;
+  }
+  .seg{display:flex; border:1px solid #9FBCCF; border-radius:10px; overflow:hidden; margin-top:4px;}
+  .seg button{flex:1; padding:8px 0; border:0; background:#fff; color:var(--sub); font:inherit; font-size:13px; font-weight:600; cursor:pointer;}
+  .seg button.on{background:var(--accent); color:#F4FAFF;}
+  #bldSeg{margin-top:0;}
+  #bldSeg button{padding:13px 0; font-size:15px;}
+  .checks{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; margin-top:10px; font-size:12.5px;}
+  .checks label{display:flex; align-items:center; gap:5px; cursor:pointer;}
+  .result{background:var(--accent); color:#F4FAFF; border-radius:14px; padding:14px 16px; margin-top:12px;}
+  .result .bd{font-size:11px; opacity:.65; line-height:1.6; word-break:keep-all;}
+  .result .main{display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-top:6px; flex-wrap:wrap;}
+  .result .price{font-size:28px; font-weight:800;}
+  .result .price small{font-size:12px; font-weight:400; opacity:.65;}
+  .rows{margin-top:12px; border-top:1px solid #5A77A0; padding-top:10px; display:grid; gap:7px; font-size:13.5px;}
+  .rows div{display:flex; justify-content:space-between;}
+  .rows span:first-child{opacity:.65; font-size:12px;}
+  .rows b{font-weight:700;}
+  .hint{font-size:11px; color:var(--faint); margin-top:8px; line-height:1.6;}
+  .warn{display:inline-block; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; margin-left:6px; vertical-align:1px;}
+  .footer{font-size:11px; color:var(--faint); text-align:center; margin-top:8px;}
+  .scroll{overflow-x:auto;}
+  #schedBody input{width:56px;}
+  .sumline{background:var(--soft); font-weight:700;}
+  .sumline td{border-top:2px solid var(--line);}
+  @media (max-width:480px){ .grid2,.grid3{grid-template-columns:1fr 1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">WTC OFFICE · 오피스운영팀</div>
+  <h1>신규단가 계산기 <span class="num" style="font-size:14px;color:var(--faint);font-weight:500">2026</span></h1>
+
+  <div class="seg" id="bldSeg" style="margin-bottom:14px;">
+    <button data-b="TT" class="on">트레이드타워 (T/T)</button>
+    <button data-b="AT">아셈타워 (A/T)</button>
+  </div>
+
+  <!-- 요율표 -->
+  <div class="card">
+    <h2>2026년 <span id="rateBldName" style="color:var(--ink)">트레이드타워</span> 신규(기준) 단가 — 신규/증평 계약 적용 <span style="font-weight:400;color:var(--faint)">· 수정 시 자동 저장</span></h2>
+    <table class="num">
+      <thead><tr><th>층구간</th><th>임대료 (원/㎡·월)</th><th>환산 (원/평·월)</th></tr></thead>
+      <tbody id="rateBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 계산기 -->
+  <div class="card">
+    <h2>신규 임차 견적 계산</h2>
+    <div class="grid2">
+      <label class="f">층 <input type="number" id="floor" placeholder="예: 25" inputmode="numeric"></label>
+      <label class="f">임대면적 <span id="areaUnitLabel">(㎡)</span>
+        <input type="number" id="area" placeholder="계약면적" inputmode="decimal"></label>
+      <div>
+        <label class="f">면적 단위</label>
+        <div class="seg" id="unitSeg">
+          <button data-u="m2" class="on">㎡</button>
+          <button data-u="py">평</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid3" style="margin-top:10px">
+      <label class="f">계약기간
+        <select id="years">
+          <option value="1">1년</option>
+          <option value="2">2년</option>
+          <option value="3" selected>3년</option>
+          <option value="4">4년</option>
+          <option value="5">5년</option>
+        </select></label>
+      <label class="f">계약 시작년도 <input type="number" id="startYear" value="2026" inputmode="numeric"></label>
+      <label class="f">보증금 배수 <input type="number" id="depMul" value="12" step="0.5" inputmode="decimal"></label>
+      <label class="f">임대료 연 인상률 (%) <input type="number" id="rentInc" value="0" step="0.5" inputmode="decimal"></label>
+      <label class="f">관리비 연 인상률 (%) <input type="number" id="camInc" value="0" step="0.5" inputmode="decimal"></label>
+      <label class="f">Fit-Out 공사기간 (일) <input type="number" id="foDays" value="0" min="0" inputmode="numeric"></label>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--sub);margin-top:12px">특별 임대료 할인 <span id="checksBld" style="font-weight:400;color:var(--faint)"></span></div>
+    <div class="checks" id="checks"></div>
+
+    <div class="result num" id="result" style="display:none">
+      <div class="bd" id="breakdown"></div>
+      <div class="main">
+        <div class="price"><span id="finalPrice">-</span> <small>원/㎡·월</small></div>
+        <div style="text-align:right; font-size:13px; opacity:.8"><span id="finalPricePy">-</span> <small style="font-size:11px">원/평·월</small></div>
+      </div>
+      <div class="rows" id="rows"></div>
+    </div>
+  </div>
+
+  <!-- 연차별 스케줄 -->
+  <div class="card" id="schedCard" style="display:none">
+    <h2>계약기간 연차별 시뮬레이션 <span style="font-weight:400;color:var(--faint)">— 렌트프리를 지급할 연차에 개월수를 입력하세요 <span id="rfLimitLabel"></span></span></h2>
+    <div class="scroll">
+      <table class="num">
+        <thead><tr><th>연차</th><th>렌트프리(개월)</th><th>임대단가(원/㎡)</th><th>월 임대료</th><th>연 임대료</th><th>연 관리비</th><th>연 합계</th></tr></thead>
+        <tbody id="schedBody"></tbody>
+        <tbody id="schedSum"></tbody>
+      </table>
+    </div>
+    <div class="rows num" id="summary" style="border-top:1px solid var(--line); color:var(--ink)"></div>
+    <div class="hint">렌트프리는 해당 연차 임대료만 면제되며 관리비는 정상 부과됩니다. 정책 한도: 신규/증평 시 트레이드타워 연 2개월 · 아셈타워 연 1개월 (한도 초과 시 경고만 표시).<br>Fit-Out은 1년차 임대료에서 일할(월 30.42일 기준)로 차감되며 관리비는 정상 부과. 정책 최대 지급: 전용 20~50평 미만 15일 · 50~100평 미만 1개월 · 100~300평 미만 1.5개월 · 300평 이상 2개월 · 600평 이상 2.5개월 (공사 시행 면적 기준, 인테리어 양수 시 미지급). 환산보증금 = 보증금 + 월임대료×100 (서울 기준 9억 이하 시 상가임대차보호법 적용). 금액은 VAT 별도.</div>
+  </div>
+
+  <!-- 보증금 ↔ 임대료 전환 -->
+  <div class="card">
+    <h2>보증금 ↔ 임대료 전환 계산기</h2>
+    <div class="grid2">
+      <div>
+        <label class="f">전환 방향</label>
+        <div class="seg" id="convSeg">
+          <button data-d="d2r" class="on">보증금 → 임대료</button>
+          <button data-d="r2d">임대료 → 보증금</button>
+        </div>
+      </div>
+      <label class="f">기준금리 (%) <input type="number" id="baseRate" value="2.50" step="0.25" inputmode="decimal"></label>
+      <label class="f"><span id="convAmtLabel">전환할 보증금 (원)</span> <input type="text" id="convAmt" placeholder="예: 500,000,000" inputmode="numeric"></label>
+      <div>
+        <label class="f">적용 전환율</label>
+        <div style="margin-top:4px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--soft); text-align:right; font-weight:800; font-size:15px;" class="num"><span id="convRateShow">-</span></div>
+        <div class="hint" id="convRateNote" style="margin-top:4px"></div>
+      </div>
+    </div>
+    <div class="rows num" id="convRows" style="border-top:1px solid var(--line); color:var(--ink); margin-top:12px; padding-top:10px"></div>
+    <div class="hint">보증금→임대료 전환: 본부장 재가 및 제소전화해조서 체결 필수(임차인 100% 비용 부담 · 공기업/정부기관 면제). 임대료→보증금 전환: 원칙 불가, 부득이하게 승인 시 기준금리 적용.</div>
+  </div>
+
+  <div class="footer">내부 실무용 · 데이터는 브라우저에만 저장되며 외부로 전송되지 않습니다 · <a href="#" id="resetBtn" style="color:var(--faint)">단가 초기화</a></div>
+</div>
+
+<script>
+const PY = 3.305785;
+const DEFAULT_RATES = {
+  TT: { low: 70886, mid: 72587, high: 74147, cam: 24772 },
+  AT: { low: 85924, mid: 87642, high: 89791, cam: 24772 }
+};
+const BLD_NAME = { TT: "트레이드타워", AT: "아셈타워" };
+const ZONE_NAME = { low: "저층부", mid: "중층부", high: "고층부" };
+const fmt = n => (n==null||isNaN(n)) ? "-" : Math.round(n).toLocaleString("ko-KR");
+const comma = el => { const v = el.value.replace(/[^\d]/g,""); el.value = v ? Number(v).toLocaleString("ko-KR") : ""; };
+const numVal = el => parseFloat(String(el.value).replace(/[^\d.]/g,"")) || 0;
+const ZONE_RANGE = {
+  TT: { high: "36층 이상", mid: "17~35층", low: "16층 이하" },
+  AT: { high: "31~40층", mid: "17~30층", low: "16층 이하" }
+};
+
+let rates = JSON.parse(JSON.stringify(DEFAULT_RATES));
+try {
+  const saved = localStorage.getItem("wtc-rates-2026-v2");
+  if (saved) { const s = JSON.parse(saved); rates = { TT: { ...DEFAULT_RATES.TT, ...(s.TT||{}) }, AT: { ...DEFAULT_RATES.AT, ...(s.AT||{}) } }; }
+} catch(e){}
+const saveRates = () => { try { localStorage.setItem("wtc-rates-2026-v2", JSON.stringify(rates)); } catch(e){} };
+
+let bld = "TT", areaUnit = "m2";
+let rfByYear = [];      // 연차별 렌트프리(개월)
+let builtYears = 0;     // 현재 스케줄 표가 그려진 연수
+let builtStart = 0;     // 현재 표의 시작년도
+const zoneOf = f => bld==="TT" ? (f>=36?"high":f>=17?"mid":"low") : (f>=31?"high":f>=17?"mid":"low");
+const $ = id => document.getElementById(id);
+
+/* 요율표 렌더 */
+function renderRates(){
+  const R = rates[bld];
+  $("rateBldName").textContent = BLD_NAME[bld];
+  const rows = ["high","mid","low"].map(z =>
+    `<tr><td>${ZONE_NAME[z]} <span style="font-weight:400;color:var(--faint);font-size:11px">${ZONE_RANGE[bld][z]}</span></td>
+      <td><input type="text" inputmode="numeric" value="${fmt(R[z])}" data-k="${z}"></td>
+      <td style="color:var(--faint)">${fmt(R[z]*PY)}</td></tr>`).join("") +
+    `<tr><td>관리비 (공통)</td>
+      <td><input type="text" inputmode="numeric" value="${fmt(R.cam)}" data-k="cam"></td>
+      <td style="color:var(--faint)">${fmt(R.cam*PY)}</td></tr>`;
+  $("rateBody").innerHTML = rows;
+  $("rateBody").querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("input", () => comma(inp));
+    inp.addEventListener("change", e => {
+      rates[bld][e.target.dataset.k] = numVal(e.target);
+      saveRates(); renderRates(); calc();
+    });
+  });
+}
+
+/* 빌딩별 할인 정책 (임대 운영 기본 정책 §2 준용) */
+const DISCOUNTS = {
+  TT: [
+    ["affil", "무역협회 유관기관 −10%p"],
+    ["member", "무역협회 회원사 −1%p"],
+    ["bad", "구조 열악 호실(아티움 View 제한 등) −5%p"],
+    ["long", "장기임차 (만 10년 이상) −0.5%p"],
+    ["big", "전용 500평 이상 −0.5%p"],
+  ],
+  AT: [
+    ["bad", "서측 View 호실 −0.5%p"],
+    ["long", "장기임차 (만 20년 이상) −0.5%p"],
+  ],
+};
+const chk = id => { const el = document.getElementById(id); return !!(el && el.checked); };
+function renderChecks(){
+  $("checksBld").textContent = `— ${BLD_NAME[bld]} 적용 항목`;
+  $("checks").innerHTML = DISCOUNTS[bld].map(([id,t]) =>
+    `<label><input type="checkbox" id="${id}">${t}</label>`).join("");
+  DISCOUNTS[bld].forEach(([id]) => $(id).addEventListener("input", calc));
+}
+
+/* 빌딩 토글 (최상단) */
+$("bldSeg").addEventListener("click", e => {
+  if(!e.target.dataset.b) return;
+  bld = e.target.dataset.b;
+  document.querySelectorAll("#bldSeg button").forEach(b => b.classList.toggle("on", b.dataset.b===bld));
+  renderChecks();   // 빌딩 전환 시 할인 선택 초기화 (정책 항목이 다르므로)
+  renderRates();
+  calc();
+});
+$("unitSeg").addEventListener("click", e => {
+  if(!e.target.dataset.u) return;
+  areaUnit = e.target.dataset.u;
+  document.querySelectorAll("#unitSeg button").forEach(b => b.classList.toggle("on", b.dataset.u===areaUnit));
+  $("areaUnitLabel").textContent = areaUnit==="m2" ? "(㎡)" : "(평)";
+  calc();
+});
+["floor","area","years","startYear","depMul","rentInc","camInc","foDays"].forEach(id => {
+  $(id).addEventListener("input", calc);
+  $(id).addEventListener("change", calc);
+});
+$("resetBtn").addEventListener("click", e => {
+  e.preventDefault();
+  if(confirm("두 빌딩의 단가표를 기본값(2026년)으로 되돌립니다.")){ rates=JSON.parse(JSON.stringify(DEFAULT_RATES)); saveRates(); renderRates(); calc(); }
+});
+
+/* 스케줄 표 골격 생성 (연수·시작년도 변경 시에만 재생성 → 입력 포커스 유지) */
+function buildSchedule(years, startYear){
+  rfByYear = Array.from({length: years}, (_, i) => rfByYear[i] || 0);
+  const body = $("schedBody");
+  body.innerHTML = Array.from({length: years}, (_, i) => `
+    <tr>
+      <td>${i+1}년차 <span style="font-weight:400;color:var(--faint)">(${startYear+i})</span></td>
+      <td><input type="number" min="0" max="12" step="0.5" value="${rfByYear[i]}" data-y="${i}" id="rf-${i}"></td>
+      <td id="up-${i}">-</td>
+      <td id="mr-${i}">-</td>
+      <td id="rent-${i}">-</td>
+      <td id="cam-${i}">-</td>
+      <td id="tot-${i}">-</td>
+    </tr>`).join("");
+  $("schedSum").innerHTML = `
+    <tr class="sumline">
+      <td>합계</td><td id="rfSumCell">-</td><td>-</td><td>-</td>
+      <td id="rentSum">-</td><td id="camSum">-</td><td id="totSum">-</td>
+    </tr>`;
+  body.querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("input", e => {
+      rfByYear[+e.target.dataset.y] = parseFloat(e.target.value) || 0;
+      calc(true);
+    });
+  });
+  builtYears = years; builtStart = startYear;
+}
+
+function calc(keepTable){
+  const fl = parseInt($("floor").value)||0;
+  const box = $("result"), sched = $("schedCard");
+  if(fl<=0){ box.style.display="none"; sched.style.display="none"; return; }
+
+  const zone = zoneOf(fl);
+  const base = rates[bld][zone];
+  const adj = [];
+  if(bld==="TT" && chk("affil")) adj.push(["유관기관",-0.10]);
+  else if(bld==="TT" && chk("member")) adj.push(["회원사",-0.01]);
+  if(chk("bad")) adj.push([bld==="TT"?"구조 열악":"서측 View", bld==="TT"?-0.05:-0.005]);
+  if(chk("long")) adj.push(["장기임차",-0.005]);
+  if(bld==="TT" && chk("big")) adj.push(["전용 500평↑",-0.005]);
+  const adjSum = adj.reduce((s,[,r])=>s+r,0);
+  const final = Math.round(base*(1+adjSum));
+
+  let areaM2 = parseFloat($("area").value)||0;
+  if(areaUnit==="py") areaM2 = areaM2*PY;
+  const years = Math.min(5, Math.max(1, parseInt($("years").value)||3));
+  const startYear = parseInt($("startYear").value)||2026;
+  const depMul = parseFloat($("depMul").value)||0;
+  const rentInc = (parseFloat($("rentInc").value)||0)/100;
+  const camInc = (parseFloat($("camInc").value)||0)/100;
+
+  /* 상단 결과 */
+  $("breakdown").innerHTML =
+    `${fl}층 · ${ZONE_NAME[zone]} 단가 ${fmt(base)}` +
+    adj.map(([n,r])=>` −${Math.abs(r*100).toFixed(1)}%(${n})`).join("") +
+    (adj.length===0 ? " (할인 없음)" : "") +
+    (bld==="TT" && chk("bad") ? " · 구조 열악 호실은 렌트프리 최대 4개월/年 추가 협상 가능" : "");
+  $("finalPrice").textContent = fmt(final);
+  $("finalPricePy").textContent = fmt(final*PY);
+
+  const mRent1 = final*areaM2, mCam1 = rates[bld].cam*areaM2;
+  let rows = "";
+  if(areaM2>0){
+    rows += `<div><span>월 임대료 (1년차)</span><b>${fmt(mRent1)} 원</b></div>`;
+    rows += `<div><span>월 관리비 (1년차)</span><b>${fmt(mCam1)} 원</b></div>`;
+    rows += `<div><span>월 합계</span><b>${fmt(mRent1+mCam1)} 원</b></div>`;
+    rows += `<div><span>보증금 (월 임대료 × ${depMul}배)</span><b>${fmt(mRent1*depMul)} 원</b></div>`;
+    const convD = mRent1*depMul + mRent1*100;
+    const isProt = convD <= 900000000;
+    rows += `<div><span>환산보증금 (보증금 + 월임대료×100)</span><b>${fmt(convD)} 원<span style="display:block;font-weight:600;font-size:11px;margin-top:2px;color:${isProt?"#9FD4AC":"#EFA79D"}">${isProt?"9억 이하 → 상가임대차보호법 적용 대상":"9억 초과 → 상가임대차보호법 미적용"}</span></b></div>`;
+    rows += `<div style="opacity:.55;font-size:11px"><span>면적</span><span>${fmt(areaM2)} ㎡ · ${fmt(areaM2/PY)} 평 · VAT 별도</span></div>`;
+  } else {
+    rows = `<div style="opacity:.55;font-size:12px"><span>면적을 입력하면 월액·보증금·연차별 표가 계산됩니다</span><span></span></div>`;
+  }
+  $("rows").innerHTML = rows;
+  box.style.display = "block";
+
+  /* 연차별 스케줄 */
+  if(areaM2<=0){ sched.style.display="none"; return; }
+  sched.style.display = "block";
+  if(builtYears !== years || builtStart !== startYear){
+    buildSchedule(years, startYear);
+  }
+
+  const rfMaxPerYear = bld==="TT" ? 2 : 1;
+  const rfLimit = rfMaxPerYear * years;
+  const foDays = Math.max(0, parseFloat($("foDays").value)||0);
+  const foMonths = foDays/30.4167;   // 일할 환산 (월 평균 30.42일)
+  let rentSum=0, camSum=0, nominalSum=0, rfMonths=0, rfSaveOnly=0, foSave=0;
+  for(let i=0;i<years;i++){
+    const uRent = final*Math.pow(1+rentInc,i);
+    const uCam = rates[bld].cam*Math.pow(1+camInc,i);
+    const mR = uRent*areaM2, mC = uCam*areaM2;
+    const rf = Math.min(12, rfByYear[i]||0);
+    const fo = i===0 ? Math.min(foMonths, Math.max(0, 12-rf)) : 0;   // FO는 1년차 일할 차감
+    const yRent = mR*(12-rf-fo), yCam = mC*12;
+    rentSum+=yRent; camSum+=yCam; nominalSum+=mR*12; rfMonths+=rf;
+    rfSaveOnly += mR*rf; foSave += mR*fo;
+    $("up-"+i).textContent = fmt(uRent);
+    $("mr-"+i).textContent = fmt(mR);
+    $("rent-"+i).textContent = fmt(yRent);
+    $("cam-"+i).textContent = fmt(yCam);
+    $("tot-"+i).textContent = fmt(yRent+yCam);
+  }
+  $("rfSumCell").innerHTML = rfMonths + "개월" + (rfMonths>rfLimit?`<span class="warn">한도초과</span>`:"");
+  $("rentSum").textContent = fmt(rentSum);
+  $("camSum").textContent = fmt(camSum);
+  $("totSum").textContent = fmt(rentSum+camSum);
+  $("rfLimitLabel").textContent = `· 정책 한도 총 ${rfLimit}개월 (${bld==="TT"?"T/T 연 2":"A/T 연 1"})`;
+
+  const totalSave = nominalSum - rentSum;
+  const totalMonths = areaM2*years*12;
+  const effUnit = rentSum/totalMonths;
+  const nomUnit = nominalSum/totalMonths;
+  const nocNom = (nominalSum + camSum)/totalMonths;   // 명목 NOC = (임대료+관리비) ÷ (면적×개월)
+  const nocEff = (rentSum + camSum)/totalMonths;      // 실질 NOC = RF·FO 차감 후
+  const sub = t => `<span style="display:block;font-weight:400;font-size:11px;color:var(--faint);margin-top:1px">${t}</span>`;
+  $("summary").innerHTML = `
+    <div style="margin-top:10px"><span style="color:var(--sub)">렌트프리 총 절감액</span><b>${fmt(rfSaveOnly)} 원</b></div>
+    <div><span style="color:var(--sub)">Fit-Out 절감액 (${foDays}일 · 일할)</span><b>${fmt(foSave)} 원</b></div>
+    <div><span style="color:var(--sub)">실질 평균 임대단가 (RF·FO 반영)</span><b>${fmt(effUnit)} 원/㎡·월${sub(`명목 ${fmt(nomUnit)} 대비 −${nomUnit? (totalSave/nominalSum*100).toFixed(1):0}%`)}</b></div>
+    <div><span style="color:var(--sub)">명목 NOC (임대료+관리비)</span><b>${fmt(nocNom)} 원/㎡·월${sub(`${fmt(nocNom*PY)} 원/평`)}</b></div>
+    <div><span style="color:var(--sub)">실질 NOC (RF·FO 반영)</span><b>${fmt(nocEff)} 원/㎡·월${sub(`${fmt(nocEff*PY)} 원/평 · 명목 대비 −${nocNom? ((nocNom-nocEff)/nocNom*100).toFixed(1):0}%`)}</b></div>
+    <div style="border-top:1px solid var(--line);padding-top:8px;margin-top:4px"><span style="color:var(--sub)">계약기간 총 임대료 (RF·FO 반영)</span><b>${fmt(rentSum)} 원</b></div>
+    <div><span style="color:var(--sub)">계약기간 총 관리비</span><b>${fmt(camSum)} 원</b></div>
+    <div><span style="color:var(--sub)">계약기간 전체 총액</span><b style="font-size:15px">${fmt(rentSum+camSum)} 원</b></div>`;
+}
+
+/* 보증금 ↔ 임대료 전환 계산기 */
+let convDir = "d2r";
+try { const br = localStorage.getItem("wtc-baserate"); if(br) $("baseRate").value = br; } catch(e){}
+$("convSeg").addEventListener("click", e => {
+  if(!e.target.dataset.d) return;
+  convDir = e.target.dataset.d;
+  document.querySelectorAll("#convSeg button").forEach(b => b.classList.toggle("on", b.dataset.d===convDir));
+  $("convAmtLabel").textContent = convDir==="d2r" ? "전환할 보증금 (원)" : "전환(감액)할 월 임대료 (원)";
+  convCalc();
+});
+$("baseRate").addEventListener("input", () => {
+  try { localStorage.setItem("wtc-baserate", $("baseRate").value); } catch(e){}
+  convCalc();
+});
+$("convAmt").addEventListener("input", () => { comma($("convAmt")); convCalc(); });
+
+function convCalc(){
+  const br = (parseFloat($("baseRate").value)||0)/100;
+  const d2r = Math.min(0.12, br*3);
+  const rate = convDir==="d2r" ? d2r : br;
+  $("convRateShow").textContent = rate>0 ? (rate*100).toFixed(2)+"% / 년" : "-";
+  $("convRateNote").textContent = convDir==="d2r"
+    ? `MIN(12%, 기준금리 ${(br*100).toFixed(2)}% × 3배 = ${(br*300).toFixed(2)}%) → ${(d2r*100).toFixed(2)}% 적용`
+    : `기준금리 ${(br*100).toFixed(2)}% 적용 (원칙 불가 · 승인 시)`;
+  const amt = numVal($("convAmt"));
+  let html = "";
+  if(amt>0 && rate>0){
+    if(convDir==="d2r"){
+      html = `<div><span>월 임대료 증가액</span><b>+${fmt(amt*rate/12)} 원/월</b></div>
+              <div><span>연간 임대료 증가액</span><b>+${fmt(amt*rate)} 원/년</b></div>
+              <div><span>보증금 감소액</span><b>−${fmt(amt)} 원</b></div>`;
+    } else {
+      html = `<div><span>필요 보증금 증가액</span><b>+${fmt(amt*12/rate)} 원</b></div>
+              <div><span>월 임대료 감소액</span><b>−${fmt(amt)} 원/월</b></div>
+              <div style="opacity:.55;font-size:11px"><span>산식</span><span>월 감액 × 12 ÷ 기준금리</span></div>`;
+    }
+  } else {
+    html = `<div style="opacity:.55;font-size:12px"><span>기준금리와 금액을 입력하면 계산됩니다</span><span></span></div>`;
+  }
+  $("convRows").innerHTML = html;
+}
+convCalc();
+
+renderChecks();
+renderRates();
+</script>
+</body>
+</html>
