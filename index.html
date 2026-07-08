@@ -107,8 +107,8 @@
         </select></label>
       <label class="f">계약 시작년도 <input type="number" id="startYear" value="2026" inputmode="numeric"></label>
       <label class="f">보증금 배수 <input type="number" id="depMul" value="12" step="0.5" inputmode="decimal"></label>
-      <label class="f">임대료 연 인상률 (%) <input type="number" id="rentInc" value="0" step="0.5" inputmode="decimal"></label>
-      <label class="f">관리비 연 인상률 (%) <input type="number" id="camInc" value="0" step="0.5" inputmode="decimal"></label>
+      <label class="f">임대료 인상률 일괄 (%) <input type="number" id="rentInc" value="0" step="0.5" inputmode="decimal" placeholder="연차별 개별 수정 가능"></label>
+      <label class="f">관리비 인상률 일괄 (%) <input type="number" id="camInc" value="0" step="0.5" inputmode="decimal" placeholder="연차별 개별 수정 가능"></label>
       <label class="f">Fit-Out 공사기간 (일) <input type="number" id="foDays" value="0" min="0" inputmode="numeric"></label>
     </div>
     <div style="font-size:11px;font-weight:600;color:var(--sub);margin-top:12px">특별 임대료 할인 <span id="checksBld" style="font-weight:400;color:var(--faint)"></span></div>
@@ -126,10 +126,10 @@
 
   <!-- 연차별 스케줄 -->
   <div class="card" id="schedCard" style="display:none">
-    <h2>계약기간 연차별 시뮬레이션 <span style="font-weight:400;color:var(--faint)">— 렌트프리를 지급할 연차에 개월수를 입력하세요 <span id="rfLimitLabel"></span></span></h2>
+    <h2>계약기간 연차별 시뮬레이션 <span style="font-weight:400;color:var(--faint)">— 렌트프리 개월수와 인상률(전년 대비 %)을 연차별로 입력하세요 <span id="rfLimitLabel"></span></span></h2>
     <div class="scroll">
       <table class="num">
-        <thead><tr><th>연차</th><th>렌트프리(개월)</th><th>임대단가(원/㎡)</th><th>월 임대료</th><th>연 임대료</th><th>연 관리비</th><th>연 합계</th></tr></thead>
+        <thead><tr><th>연차</th><th>렌트프리(개월)</th><th>임대 인상(%)</th><th>임대단가(원/㎡)</th><th>월 임대료</th><th>연 임대료</th><th>관리비 인상(%)</th><th>연 관리비</th><th>연 합계</th></tr></thead>
         <tbody id="schedBody"></tbody>
         <tbody id="schedSum"></tbody>
       </table>
@@ -188,7 +188,9 @@ try {
 const saveRates = () => { try { localStorage.setItem("wtc-rates-2026-v2", JSON.stringify(rates)); } catch(e){} };
 
 let bld = "TT", areaUnit = "m2";
-let rfByYear = [];      // 연차별 렌트프리(개월)
+let rfByYear = [];        // 연차별 렌트프리(개월)
+let rentIncByYear = [];   // 연차별 임대료 인상률(%) — 1년차는 기준(0)
+let camIncByYear = [];    // 연차별 관리비 인상률(%)
 let builtYears = 0;     // 현재 스케줄 표가 그려진 연수
 let builtStart = 0;     // 현재 표의 시작년도
 const zoneOf = f => bld==="TT" ? (f>=36?"high":f>=17?"mid":"low") : (f>=31?"high":f>=17?"mid":"low");
@@ -253,10 +255,12 @@ $("unitSeg").addEventListener("click", e => {
   $("areaUnitLabel").textContent = areaUnit==="m2" ? "(㎡)" : "(평)";
   calc();
 });
-["floor","area","years","startYear","depMul","rentInc","camInc","foDays"].forEach(id => {
+["floor","area","years","startYear","depMul","foDays"].forEach(id => {
   $(id).addEventListener("input", calc);
   $(id).addEventListener("change", calc);
 });
+$("rentInc").addEventListener("input", () => applyBulkInc("rent"));
+$("camInc").addEventListener("input", () => applyBulkInc("cam"));
 $("resetBtn").addEventListener("click", e => {
   e.preventDefault();
   if(confirm("두 빌딩의 단가표를 기본값(2026년)으로 되돌립니다.")){ rates=JSON.parse(JSON.stringify(DEFAULT_RATES)); saveRates(); renderRates(); calc(); }
@@ -264,30 +268,53 @@ $("resetBtn").addEventListener("click", e => {
 
 /* 스케줄 표 골격 생성 (연수·시작년도 변경 시에만 재생성 → 입력 포커스 유지) */
 function buildSchedule(years, startYear){
+  const gRent = parseFloat($("rentInc").value)||0, gCam = parseFloat($("camInc").value)||0;
   rfByYear = Array.from({length: years}, (_, i) => rfByYear[i] || 0);
+  rentIncByYear = Array.from({length: years}, (_, i) => i===0 ? 0 : (rentIncByYear[i]!==undefined ? rentIncByYear[i] : gRent));
+  camIncByYear  = Array.from({length: years}, (_, i) => i===0 ? 0 : (camIncByYear[i]!==undefined ? camIncByYear[i] : gCam));
   const body = $("schedBody");
   body.innerHTML = Array.from({length: years}, (_, i) => `
     <tr>
       <td>${i+1}년차 <span style="font-weight:400;color:var(--faint)">(${startYear+i})</span></td>
-      <td><input type="number" min="0" max="12" step="0.5" value="${rfByYear[i]}" data-y="${i}" id="rf-${i}"></td>
+      <td><input type="number" min="0" max="12" step="0.5" value="${rfByYear[i]}" data-y="${i}" data-k="rf"></td>
+      ${i===0 ? '<td style="color:var(--faint);font-weight:400">기준</td>'
+              : `<td><input type="number" step="0.5" value="${rentIncByYear[i]}" data-y="${i}" data-k="ri"></td>`}
       <td id="up-${i}">-</td>
       <td id="mr-${i}">-</td>
       <td id="rent-${i}">-</td>
+      ${i===0 ? '<td style="color:var(--faint);font-weight:400">기준</td>'
+              : `<td><input type="number" step="0.5" value="${camIncByYear[i]}" data-y="${i}" data-k="ci"></td>`}
       <td id="cam-${i}">-</td>
       <td id="tot-${i}">-</td>
     </tr>`).join("");
   $("schedSum").innerHTML = `
     <tr class="sumline">
-      <td>합계</td><td id="rfSumCell">-</td><td>-</td><td>-</td>
-      <td id="rentSum">-</td><td id="camSum">-</td><td id="totSum">-</td>
+      <td>합계</td><td id="rfSumCell">-</td><td>-</td><td>-</td><td>-</td>
+      <td id="rentSum">-</td><td>-</td><td id="camSum">-</td><td id="totSum">-</td>
     </tr>`;
   body.querySelectorAll("input").forEach(inp => {
     inp.addEventListener("input", e => {
-      rfByYear[+e.target.dataset.y] = parseFloat(e.target.value) || 0;
+      const y = +e.target.dataset.y, v = parseFloat(e.target.value)||0;
+      if(e.target.dataset.k==="rf") rfByYear[y]=v;
+      else if(e.target.dataset.k==="ri") rentIncByYear[y]=v;
+      else camIncByYear[y]=v;
       calc(true);
     });
   });
   builtYears = years; builtStart = startYear;
+}
+
+/* 일괄 인상률 입력 → 모든 연차(2년차~)에 채우기 */
+function applyBulkInc(kind){
+  const v = parseFloat($(kind==="rent"?"rentInc":"camInc").value)||0;
+  const arr = kind==="rent" ? rentIncByYear : camIncByYear;
+  const prefix = kind==="rent" ? "ri-" : "ci-";
+  for(let i=1;i<arr.length;i++){
+    arr[i]=v;
+    const el = document.querySelector(`input[data-k="${kind==="rent"?"ri":"ci"}"][data-y="${i}"]`);
+    if(el) el.value = v;
+  }
+  calc(true);
 }
 
 function calc(keepTable){
@@ -311,8 +338,7 @@ function calc(keepTable){
   const years = Math.min(5, Math.max(1, parseInt($("years").value)||3));
   const startYear = parseInt($("startYear").value)||2026;
   const depMul = parseFloat($("depMul").value)||0;
-  const rentInc = (parseFloat($("rentInc").value)||0)/100;
-  const camInc = (parseFloat($("camInc").value)||0)/100;
+
 
   /* 상단 결과 */
   $("breakdown").innerHTML =
@@ -352,9 +378,12 @@ function calc(keepTable){
   const foDays = Math.max(0, parseFloat($("foDays").value)||0);
   const foMonths = foDays/30.4167;   // 일할 환산 (월 평균 30.42일)
   let rentSum=0, camSum=0, nominalSum=0, rfMonths=0, rfSaveOnly=0, foSave=0;
+  let uRent = final, uCam = rates[bld].cam;
   for(let i=0;i<years;i++){
-    const uRent = final*Math.pow(1+rentInc,i);
-    const uCam = rates[bld].cam*Math.pow(1+camInc,i);
+    if(i>0){
+      uRent = uRent * (1 + (rentIncByYear[i]||0)/100);
+      uCam  = uCam  * (1 + (camIncByYear[i]||0)/100);
+    }
     const mR = uRent*areaM2, mC = uCam*areaM2;
     const rf = Math.min(12, rfByYear[i]||0);
     const fo = i===0 ? Math.min(foMonths, Math.max(0, 12-rf)) : 0;   // FO는 1년차 일할 차감
