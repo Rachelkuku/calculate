@@ -51,7 +51,7 @@
   .rows{margin-top:12px; border-top:1px solid #5A77A0; padding-top:10px; display:grid; gap:7px; font-size:13.5px;}
   .rows div{display:flex; justify-content:space-between;}
   .rows span:first-child{opacity:.65; font-size:12px;}
-  .rows b{font-weight:700;}
+  .rows b{font-weight:700; text-align:right;}
   .hint{font-size:11px; color:var(--faint); margin-top:8px; line-height:1.6;}
   .warn{display:inline-block; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; margin-left:6px; vertical-align:1px;}
   .footer{font-size:11px; color:var(--faint); text-align:center; margin-top:8px;}
@@ -86,8 +86,8 @@
     <h2>신규 임차 견적 계산</h2>
     <div class="grid2">
       <label class="f">층 <input type="number" id="floor" placeholder="예: 25" inputmode="numeric"></label>
-      <label class="f">임대면적 <span id="areaUnitLabel">(㎡)</span>
-        <input type="number" id="area" placeholder="계약면적" inputmode="decimal"></label>
+      <label class="f">전용면적 <span id="areaUnitLabel">(㎡)</span>
+        <input type="number" id="area" placeholder="전용면적" inputmode="decimal"></label>
       <div>
         <label class="f">면적 단위</label>
         <div class="seg" id="unitSeg">
@@ -359,7 +359,7 @@ function calc(keepTable){
     const convD = mRent1*depMul + mRent1*100;
     const isProt = convD <= 900000000;
     rows += `<div><span>환산보증금 (보증금 + 월임대료×100)</span><b>${fmt(convD)} 원<span style="display:block;font-weight:600;font-size:11px;margin-top:2px;color:${isProt?"#9FD4AC":"#EFA79D"}">${isProt?"9억 이하 → 상가임대차보호법 적용 대상":"9억 초과 → 상가임대차보호법 미적용"}</span></b></div>`;
-    rows += `<div style="opacity:.55;font-size:11px"><span>면적</span><span>${fmt(areaM2)} ㎡ · ${fmt(areaM2/PY)} 평 · VAT 별도</span></div>`;
+    rows += `<div style="opacity:.55;font-size:11px"><span>전용면적</span><span>${fmt(areaM2)} ㎡ · ${fmt(areaM2/PY)} 평 · VAT 별도</span></div>`;
   } else {
     rows = `<div style="opacity:.55;font-size:12px"><span>면적을 입력하면 월액·보증금·연차별 표가 계산됩니다</span><span></span></div>`;
   }
@@ -408,7 +408,7 @@ function calc(keepTable){
   const nomUnit = nominalSum/totalMonths;
   const nocNom = (nominalSum + camSum)/totalMonths;   // 명목 NOC = (임대료+관리비) ÷ (면적×개월)
   const nocEff = (rentSum + camSum)/totalMonths;      // 실질 NOC = RF·FO 차감 후
-  const sub = t => `<span style="display:block;font-weight:400;font-size:11px;color:var(--faint);margin-top:1px">${t}</span>`;
+  const sub = t => `<span style="display:block;text-align:right;font-weight:400;font-size:11px;color:var(--faint);margin-top:1px">${t}</span>`;
   $("summary").innerHTML = `
     <div style="margin-top:10px"><span style="color:var(--sub)">렌트프리 총 절감액</span><b>${fmt(rfSaveOnly)} 원</b></div>
     <div><span style="color:var(--sub)">Fit-Out 절감액 (${foDays}일 · 일할)</span><b>${fmt(foSave)} 원</b></div>
