@@ -173,6 +173,7 @@ const DEFAULT_RATES = {
 const BLD_NAME = { TT: "트레이드타워", AT: "아셈타워" };
 const ZONE_NAME = { low: "저층부", mid: "중층부", high: "고층부" };
 const fmt = n => (n==null||isNaN(n)) ? "-" : Math.round(n).toLocaleString("ko-KR");
+const rd10 = n => Math.floor((n||0)/10)*10;   // 엑셀 =ROUNDDOWN(n,-1) 과 동일 (10원 단위 버림)
 const comma = el => { const v = el.value.replace(/[^\d]/g,""); el.value = v ? Number(v).toLocaleString("ko-KR") : ""; };
 const numVal = el => parseFloat(String(el.value).replace(/[^\d.]/g,"")) || 0;
 const ZONE_RANGE = {
@@ -349,7 +350,7 @@ function calc(keepTable){
   $("finalPrice").textContent = fmt(final);
   $("finalPricePy").textContent = fmt(final*PY);
 
-  const mRent1 = final*areaM2, mCam1 = rates[bld].cam*areaM2;
+  const mRent1 = rd10(final*areaM2), mCam1 = rd10(rates[bld].cam*areaM2);
   let rows = "";
   if(areaM2>0){
     rows += `<div><span>월 임대료 (1년차)</span><b>${fmt(mRent1)} 원</b></div>`;
@@ -384,7 +385,7 @@ function calc(keepTable){
       uRent = uRent * (1 + (rentIncByYear[i]||0)/100);
       uCam  = uCam  * (1 + (camIncByYear[i]||0)/100);
     }
-    const mR = uRent*areaM2, mC = uCam*areaM2;
+    const mR = rd10(uRent*areaM2), mC = rd10(uCam*areaM2);
     const rf = Math.min(12, rfByYear[i]||0);
     const fo = i===0 ? Math.min(foMonths, Math.max(0, 12-rf)) : 0;   // FO는 1년차 일할 차감
     const yRent = mR*(12-rf-fo), yCam = mC*12;
