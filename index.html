@@ -173,7 +173,7 @@ const DEFAULT_RATES = {
 const BLD_NAME = { TT: "트레이드타워", AT: "아셈타워" };
 const ZONE_NAME = { low: "저층부", mid: "중층부", high: "고층부" };
 const fmt = n => (n==null||isNaN(n)) ? "-" : Math.round(n).toLocaleString("ko-KR");
-const rd10 = n => Math.floor((n||0)/10)*10;   // 엑셀 =ROUNDDOWN(n,-1) 과 동일 (10원 단위 버림)
+const rd10 = n => Math.floor((n||0)/100)*100;   // 엑셀 =ROUNDDOWN(n,-2) 과 동일 (백의자리까지, 십의자리 버림)
 const comma = el => { const v = el.value.replace(/[^\d]/g,""); el.value = v ? Number(v).toLocaleString("ko-KR") : ""; };
 const numVal = el => parseFloat(String(el.value).replace(/[^\d.]/g,"")) || 0;
 const ZONE_RANGE = {
@@ -332,7 +332,7 @@ function calc(keepTable){
   if(chk("long")) adj.push(["장기임차",-0.005]);
   if(bld==="TT" && chk("big")) adj.push(["전용 500평↑",-0.005]);
   const adjSum = adj.reduce((s,[,r])=>s+r,0);
-  const final = Math.round(base*(1+adjSum));
+  const final = Math.floor(base*(1+adjSum));   // =ROUNDDOWN(x,0) 소수점 버림, 1원 단위까지 표시
 
   let areaM2 = parseFloat($("area").value)||0;
   if(areaUnit==="py") areaM2 = areaM2*PY;
@@ -469,3 +469,4 @@ renderRates();
 </script>
 </body>
 </html>
+
